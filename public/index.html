@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📈 Stock Market Dashboard</h1>
+            <p>Real-time stock tracking with technical analysis</p>
+        </header>
+
+        <!-- Search Bar -->
+        <div class="search-section">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="symbolInput" 
+                    placeholder="Enter stock symbol (e.g., AAPL, GOOGL, TSLA)"
+                    autocomplete="off"
+                >
+                <button id="searchBtn">Search</button>
+                <div id="suggestions" class="suggestions"></div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar: Stock Tabs -->
+            <aside class="sidebar">
+                <h3>Popular Stocks</h3>
+                <div class="stock-tabs" id="stockTabs">
+                    <button class="tab-btn active" data-symbol="AAPL">AAPL</button>
+                    <button class="tab-btn" data-symbol="GOOGL">GOOGL</button>
+                    <button class="tab-btn" data-symbol="MSFT">MSFT</button>
+                    <button class="tab-btn" data-symbol="TSLA">TSLA</button>
+                    <button class="tab-btn" data-symbol="AMZN">AMZN</button>
+                    <button class="tab-btn" data-symbol="NVDA">NVDA</button>
+                </div>
+            </aside>
+
+            <!-- Center: Chart and Info -->
+            <main class="chart-section">
+                <!-- Stock Info Card -->
+                <div class="stock-info">
+                    <div class="info-left">
+                        <h2 id="stockSymbol">AAPL</h2>
+                        <div class="price-info">
+                            <span id="currentPrice" class="price">$0.00</span>
+                            <span id="priceChange" class="change">+0.00 (+0.00%)</span>
+                        </div>
+                    </div>
+                    <div class="info-right">
+                        <div class="stat">
+                            <span class="label">52W High</span>
+                            <span id="high52w" class="value">-</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">52W Low</span>
+                            <span id="low52w" class="value">-</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">Market Cap</span>
+                            <span id="marketCap" class="value">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Time Range Buttons -->
+                <div class="time-range">
+                    <button class="range-btn" data-range="1d">1D</button>
+                    <button class="range-btn active" data-range="1mo">1M</button>
+                    <button class="range-btn" data-range="1y">1Y</button>
+                    <button class="range-btn" data-range="5y">5Y</button>
+                </div>
+
+                <!-- Chart Container -->
+                <div class="chart-container">
+                    <canvas id="stockChart"></canvas>
+                </div>
+
+                <!-- Technical Indicators -->
+                <div class="indicators">
+                    <div class="indicator-card">
+                        <span class="indicator-label">MA 20</span>
+                        <span id="ma20" class="indicator-value">-</span>
+                    </div>
+                    <div class="indicator-card">
+                        <span class="indicator-label">MA 50</span>
+                        <span id="ma50" class="indicator-value">-</span>
+                    </div>
+                    <div class="indicator-card">
+                        <span class="indicator-label">RSI (14)</span>
+                        <span id="rsi" class="indicator-value">-</span>
+                    </div>
+                    <div class="indicator-card">
+                        <span class="indicator-label">Volume</span>
+                        <span id="volume" class="indicator-value">-</span>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- News Section -->
+        <section class="news-section">
+            <h3>📰 Latest News</h3>
+            <div class="news-container" id="newsContainer">
+                <p class="loading">Loading news...</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

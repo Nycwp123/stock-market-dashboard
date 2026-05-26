@@ -167,6 +167,9 @@
         <span class="tm-cat-btn active" data-cat="commodities">Commodities</span>
         <span class="tm-cat-btn active" data-cat="forex">Forex</span>
         <span class="tm-cat-btn active" data-cat="crypto">Crypto</span>
+        <span class="tm-divider"></span>
+        <span style="display:flex;align-items:center;gap:3px;font-size:11px;color:var(--text-muted)">Add <input type="text" id="ovAddSym" placeholder="TICKER" style="width:60px;font-size:11px;padding:2px 4px;background:var(--bg);color:var(--text-primary);border:1px solid var(--border);border-radius:4px;text-transform:uppercase"><button id="ovAddSymBtn" style="font-size:11px;padding:2px 6px;background:var(--accent);color:#000;border:none;border-radius:3px;cursor:pointer">+</button></span>
+        <span id="ovCustomSyms" style="display:inline-flex;align-items:center;gap:3px"></span>
       </div>
       <div id="ovSections"></div>
     </div>
@@ -202,13 +205,31 @@
         </div>
         <div class="tv-panel tv-right">
           <div class="panel-header">Trade</div>
-          <div class="tv-trade">
-            <input type="text" id="tvSymbol" placeholder="Symbol e.g. AAPL">
+          <div class="tv-trade" style="position:relative">
+            <input type="text" id="tvSymbol" placeholder="Symbol e.g. AAPL" autocomplete="off">
+            <div id="tvSymSuggestions" style="display:none;position:absolute;top:28px;left:0;right:0;z-index:100;background:var(--bg-base);border:1px solid var(--border);border-radius:4px;max-height:200px;overflow-y:auto"></div>
             <input type="number" id="tvShares" placeholder="Shares" min="0" step="1">
             <div class="tv-price-info" id="tvPriceInfo">Current Price: --</div>
             <div class="tv-buttons">
               <button id="tvBuyBtn" class="tv-btn tv-buy">Buy</button>
               <button id="tvSellBtn" class="tv-btn tv-sell">Sell</button>
+            </div>
+          </div>
+          <div id="tvSuggestedStocks" style="padding:6px 0;border-top:1px solid var(--border-light);margin-top:6px">
+            <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Popular/common:</div>
+            <div id="tvSuggestChips" style="display:flex;flex-wrap:wrap;gap:2px;font-size:10px;color:var(--text-muted)">
+              <span class="tv-suggest" data-sym="AAPL" style="padding:2px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer">AAPL</span>
+              <span class="tv-suggest" data-sym="MSFT" style="padding:2px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer">MSFT</span>
+              <span class="tv-suggest" data-sym="GOOGL" style="padding:2px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer">GOOGL</span>
+              <span class="tv-suggest" data-sym="TSLA" style="padding:2px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer">TSLA</span>
+              <span class="tv-suggest" data-sym="NVDA" style="padding:2px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer">NVDA</span>
+              <span class="tv-suggest" data-sym="AMZN" style="padding:2px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer">AMZN</span>
+              <span class="tv-suggest" data-sym="META" style="padding:2px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer">META</span>
+              <span class="tv-suggest" data-sym="BTC-USD" style="padding:2px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer">BTC</span>
+              <span class="tv-suggest" data-sym="ETH-USD" style="padding:2px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer">ETH</span>
+              <span class="tv-suggest" data-sym="DOGE-USD" style="padding:2px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer">DOGE</span>
+              <span class="tv-suggest" data-sym="SOL-USD" style="padding:2px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer">SOL</span>
+              <span class="tv-suggest" data-sym="XRP-USD" style="padding:2px 6px;border:1px solid var(--border);border-radius:3px;cursor:pointer">XRP</span>
             </div>
           </div>
           <div class="tv-transactions">

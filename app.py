@@ -266,20 +266,31 @@ def _g(obj, key):
     except: return None
 
 def _fetch_current_price(symbol):
-    try:
-        url = f'{YH}/v8/finance/chart/{symbol}?interval=1d&range=5d'
-        r = requests.get(url, headers=HEADERS, timeout=10)
-        if r.status_code != 200: return None
-        m = r.json()['chart']['result'][0]['meta']
-        price = m.get('regularMarketPrice') or m.get('chartPreviousClose')
-        prev = m.get('chartPreviousClose') or m.get('regularMarketPreviousClose')
-        chg = round(price - prev, 2) if (price and prev) else None
-        chg_pct = round((chg / prev) * 100, 2) if (chg and prev) else None
-        return {
-            'symbol': symbol, 'price': price, 'prev': prev,
-            'change': chg, 'changePercent': chg_pct,
-        }
-    except: return None
+    def _try(sym):
+        try:
+            url = f'{YH}/v8/finance/chart/{sym}?interval=1d&range=5d'
+            r = requests.get(url, headers=HEADERS, timeout=10)
+            if r.status_code != 200: return None
+            m = r.json()['chart']['result'][0]['meta']
+            price = m.get('regularMarketPrice') or m.get('chartPreviousClose')
+            prev = m.get('chartPreviousClose') or m.get('regularMarketPreviousClose')
+            chg = round(price - prev, 2) if (price and prev) else None
+            chg_pct = round((chg / prev) * 100, 2) if (chg and prev) else None
+            return {'symbol': sym, 'price': price, 'prev': prev, 'change': chg, 'changePercent': chg_pct}
+        except: return None
+    result = _try(symbol)
+    if result and '-' in symbol: return result
+    # For bare symbols, also try -USD (crypto) and prefer the higher-price result
+    if '-' not in symbol:
+        result_usd = _try(symbol + '-USD')
+        if result_usd:
+            # Prefer USD variant if its price is significantly different (crypto)
+            if not result or (abs(result_usd.get('price',0) - result.get('price',0)) > result.get('price',0) * 3):
+                return result_usd
+            return result
+        result_btc = _try(symbol + '-BTC')
+        if result_btc: return result_btc
+    return result if result else None
 
 # ─── Routes ──────────────────────────────────────────────
 

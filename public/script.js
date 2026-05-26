@@ -34,7 +34,8 @@ const state = {
   bollingerSeries:{upper:null,mid:null,lower:null},
   mapInstance:null, mapInitialized:false,
   mapSearchTimeout:null, aiStreaming:false, aiQueue:[],
-  treeOpts:{group:'category',color:'change',size:'value',layout:'squarify',maxItems:50,catFilter:[]},
+  treeOpts:{group:'category',color:'change',size:'value',layout:'squarify',maxItems:0,catFilter:[]},
+  overviewSymbols:[],
 };
 
 function $(id) { return document.getElementById(id); }
@@ -513,9 +514,10 @@ let currentMapInfo = null;
 const TILE_LAYERS = {
   dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'}),
   satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'&copy; Esri'}),
+  sentinel: L.tileLayer('https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2021_3857/default/g/{z}/{y}/{x}.jpg',{maxZoom:19,attribution:'&copy; Copernicus & EOX',maxNativeZoom:18}),
   light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd'}),
 };
-let currentTileLayer = 'satellite';
+let currentTileLayer = 'sentinel';
 let satMarker = null, satSwath = null, satGroundTrack = null;
 let satAnimationTimer = null;
 
@@ -791,12 +793,12 @@ function syncMapFilters(){
     if(el.mfShipTrajectories.checked){if(!m.hasLayer(trail))m.addLayer(trail);}
     else{if(m.hasLayer(trail))m.removeLayer(trail);}
   });
-  // Satellite checkbox toggles basemap + Sentinel marker
+  // Satellite checkbox toggles Sentinel-2 basemap + Sentinel-1 marker
   if(el.mfSatellite.checked){
-    if(currentTileLayer!=='satellite'){switchTileLayer('satellite');el.mapTileType.value='satellite';}
+    if(currentTileLayer!=='sentinel'){switchTileLayer('sentinel');el.mapTileType.value='sentinel';}
     if(satMarker&&!m.hasLayer(satMarker))m.addLayer(satMarker);
   }else{
-    if(currentTileLayer==='satellite'){switchTileLayer('dark');el.mapTileType.value='dark';}
+    if(currentTileLayer==='sentinel'){switchTileLayer('dark');el.mapTileType.value='dark';}
     if(satMarker&&m.hasLayer(satMarker))m.removeLayer(satMarker);
   }
   const legendEl=document.querySelector('.map-legend');
@@ -917,8 +919,22 @@ async function fetchAndRenderOverview(){
   try{
     const r=await fetch('/api/overview');const data=await r.json();
     const opts=state.treeOpts;
-    const catColors={indices:'#58a6ff',commodities:'#d29922',forex:'#3fb950',crypto:'#bc8cff'};
+    const catColors={indices:'#58a6ff',commodities:'#d29922',forex:'#3fb950',crypto:'#bc8cff',custom:'#f778ba'};
     const catOrder=Object.keys(catColors).filter(c=>data[c]&&data[c].length);
+
+    // Fetch custom symbols
+    const customSyms=state.overviewSymbols||[];
+    if(customSyms.length){
+      data.custom=await Promise.all(customSyms.map(async sym=>{
+        try{
+          const r=await fetch('/api/price/'+encodeURIComponent(sym));
+          if(!r.ok)return null;
+          const d=await r.json();
+          return d.price!=null?{symbol:sym,name:sym,price:d.price,change:d.change,changePercent:d.changePercent}:null;
+        }catch{return null;}
+      }));
+      data.custom=data.custom.filter(Boolean);
+    }
 
     // Build items
     const activeCats=opts.catFilter&&opts.catFilter.length?opts.catFilter:catOrder;
@@ -1084,6 +1100,39 @@ function initOverviewControls(){
     document.querySelectorAll('.tm-cat-btn').forEach(b=>b.classList.toggle('active',!filter.length||filter.includes(b.dataset.cat)));
     fetchAndRenderOverview();
   });
+  // Custom symbols: add
+  document.getElementById('ovAddSymBtn')?.addEventListener('click',addOverviewSymbol);
+  document.getElementById('ovAddSym')?.addEventListener('keydown',e=>{if(e.key==='Enter')addOverviewSymbol();});
+  renderOverviewCustomSyms();
+}
+
+function addOverviewSymbol(){
+  const inp=document.getElementById('ovAddSym');
+  const sym=inp.value.trim().toUpperCase();
+  if(!sym){toast('Enter a symbol','error');return;}
+  if(state.overviewSymbols.includes(sym)){toast(sym+' already added','error');return;}
+  state.overviewSymbols.push(sym);
+  inp.value='';
+  renderOverviewCustomSyms();
+  fetchAndRenderOverview();
+  saveUserState();
+}
+
+function removeOverviewSymbol(sym){
+  state.overviewSymbols=state.overviewSymbols.filter(s=>s!==sym);
+  renderOverviewCustomSyms();
+  fetchAndRenderOverview();
+  saveUserState();
+}
+
+function renderOverviewCustomSyms(){
+  const c=document.getElementById('ovCustomSyms');
+  if(!c)return;
+  if(!state.overviewSymbols.length){c.innerHTML='';return;}
+  c.innerHTML=state.overviewSymbols.map(sym=>`<span style="font-size:10px;padding:1px 5px;border:1px solid var(--border);border-radius:3px;color:var(--text-muted);display:inline-flex;align-items:center;gap:3px;cursor:default">${sym}<span class="ov-rm-sym" data-sym="${sym}" style="cursor:pointer;color:var(--red);font-weight:700;margin-left:2px">&times;</span></span>`).join('');
+  c.querySelectorAll('.ov-rm-sym').forEach(btn=>{
+    btn.addEventListener('click',e=>{e.stopPropagation();removeOverviewSymbol(btn.dataset.sym);});
+  });
 }
 
 /* ─── TRADING ─── */
@@ -1177,9 +1226,40 @@ function initTrading(){
     const amt=parseFloat(el.tvDepositAmt.value);if(!amt||amt<=0){toast('Enter valid amount','error');return;}
     try{const r=await fetch('/api/account/deposit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({amount:amt})});if(r.ok){toast('Deposited $'+fmt(amt),'success');el.tvDepositAmt.value='';fetchTradingData();}else{const e=await r.json();toast(e.error||'Failed','error');}}catch(e){toast('Failed','error');}
   });
+  let tvSymST=null;
   el.tvSymbol.addEventListener('input',()=>{
-    const sym=el.tvSymbol.value.trim().toUpperCase();if(!sym){el.tvPriceInfo.textContent='Current Price: --';return;}
+    const sym=el.tvSymbol.value.trim().toUpperCase();
+    if(tvSymST)clearTimeout(tvSymST);
+    if(!sym){el.tvPriceInfo.textContent='Current Price: --';el.tvSymSuggestions.style.display='none';return;}
     fetch('/api/price/'+sym).then(r=>r.json()).then(d=>{if(d.price)el.tvPriceInfo.textContent='Current Price: $'+fmt(d.price)+' (Change: '+(d.changePercent>=0?'+':'')+fmt(d.changePercent)+'%)';else el.tvPriceInfo.textContent='Price unavailable';}).catch(()=>el.tvPriceInfo.textContent='Price unavailable');
+    if(sym.length>=1){
+      tvSymST=setTimeout(async()=>{
+        try{const r=await fetch('/api/search/'+encodeURIComponent(sym));if(!r.ok)return;const results=await r.json();
+          const c=el.tvSymSuggestions;
+          if(!results.length){c.style.display='none';return;}
+          c.innerHTML=results.map(r=>`<div class="tv-sym-item" data-sym="${r.symbol}" style="padding:4px 8px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center">
+            <span><strong>${r.symbol}</strong> <span style="color:var(--text-muted);font-size:10px">${escHtml(r.name)}</span></span>
+            <span style="font-size:10px;color:var(--text-muted)">${r.type||''}</span>
+          </div>`).join('');
+          c.style.display='block';
+          c.querySelectorAll('.tv-sym-item').forEach(item=>{
+            item.addEventListener('click',()=>{
+              el.tvSymbol.value=item.dataset.sym;
+              c.style.display='none';
+              el.tvSymbol.dispatchEvent(new Event('input'));
+            });
+          });
+        }catch(e){}
+      },200);
+    }
+  });
+  el.tvSymbol.addEventListener('blur',()=>setTimeout(()=>{el.tvSymSuggestions.style.display='none';},200));
+  // Click handlers for suggested stock chips
+  document.getElementById('tvSuggestedStocks')?.addEventListener('click',e=>{
+    const chip=e.target.closest('.tv-suggest');
+    if(!chip)return;
+    el.tvSymbol.value=chip.dataset.sym;
+    el.tvSymbol.dispatchEvent(new Event('input'));
   });
   el.tvBuyBtn.addEventListener('click',async()=>{
     const sym=el.tvSymbol.value.trim().toUpperCase(),shares=parseFloat(el.tvShares.value);
@@ -1649,7 +1729,7 @@ function saveUserState(){
   fetch('/api/userstate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
     watchlist:syms,history:viewedHistory.slice(0,50),activeTab:tab?tab.dataset.view:'stocks',
     lastSymbol:state.symbol,lastRange:state.range,indicators,
-    aiChatHistory:aiMessageHistory.slice(-50),aiSessions,
+    aiChatHistory:aiMessageHistory.slice(-50),aiSessions,overviewSymbols:state.overviewSymbols,
   })}).catch(()=>{});
 }
 let _saveTimer=null;
@@ -1686,6 +1766,8 @@ async function loadUserState(){
       const active=aiSessions.find(ss=>ss.id===activeSessionId);
       if(active){aiMessageHistory=active.messages||[];}
     }
+    // Custom overview symbols
+    if(s.overviewSymbols) state.overviewSymbols=s.overviewSymbols;
   }catch(e){}
   // Apply initial active class to watchlist
   document.querySelectorAll('.watch-item').forEach(w=>w.classList.toggle('active',w.dataset.symbol===state.symbol));
@@ -1716,6 +1798,8 @@ document.addEventListener('DOMContentLoaded',async()=>{
   initAlerts();
   initAI();
   await loadUserState();
+  renderOverviewCustomSyms();
+  fetchAndRenderOverview();
   renderIntervalPills(state.range);
   loadStock(state.symbol,state.range);
 

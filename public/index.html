@@ -1,121 +1,323 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Market Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZEUS Terminal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1>📈 Stock Market Dashboard</h1>
-            <p>Real-time stock tracking with technical analysis</p>
-        </header>
-
-        <!-- Search Bar -->
-        <div class="search-section">
-            <div class="search-box">
-                <input 
-                    type="text" 
-                    id="symbolInput" 
-                    placeholder="Enter stock symbol (e.g., AAPL, GOOGL, TSLA)"
-                    autocomplete="off"
-                >
-                <button id="searchBtn">Search</button>
-                <div id="suggestions" class="suggestions"></div>
-            </div>
+  <div id="app">
+    <header id="topbar">
+      <div class="topbar-left">
+        <span class="brand"><span class="lightning">⚡</span>ZEUS</span>
+        <div class="view-tabs" id="viewTabs">
+          <button class="view-tab active" data-view="stocks">Stocks</button>
+          <button class="view-tab" data-view="news">News</button>
+          <button class="view-tab" data-view="map">Map</button>
+          <button class="view-tab" data-view="overview">Overview</button>
+          <button class="view-tab" data-view="trading">Trading</button>
+          <button class="view-tab" data-view="alerts">Alerts</button>
+          <button class="view-tab" data-view="ai">AI</button>
+          <button class="view-tab" data-view="settings">Settings</button>
         </div>
-
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Left Sidebar: Stock Tabs -->
-            <aside class="sidebar">
-                <h3>Popular Stocks</h3>
-                <div class="stock-tabs" id="stockTabs">
-                    <button class="tab-btn active" data-symbol="AAPL">AAPL</button>
-                    <button class="tab-btn" data-symbol="GOOGL">GOOGL</button>
-                    <button class="tab-btn" data-symbol="MSFT">MSFT</button>
-                    <button class="tab-btn" data-symbol="TSLA">TSLA</button>
-                    <button class="tab-btn" data-symbol="AMZN">AMZN</button>
-                    <button class="tab-btn" data-symbol="NVDA">NVDA</button>
-                </div>
-            </aside>
-
-            <!-- Center: Chart and Info -->
-            <main class="chart-section">
-                <!-- Stock Info Card -->
-                <div class="stock-info">
-                    <div class="info-left">
-                        <h2 id="stockSymbol">AAPL</h2>
-                        <div class="price-info">
-                            <span id="currentPrice" class="price">$0.00</span>
-                            <span id="priceChange" class="change">+0.00 (+0.00%)</span>
-                        </div>
-                    </div>
-                    <div class="info-right">
-                        <div class="stat">
-                            <span class="label">52W High</span>
-                            <span id="high52w" class="value">-</span>
-                        </div>
-                        <div class="stat">
-                            <span class="label">52W Low</span>
-                            <span id="low52w" class="value">-</span>
-                        </div>
-                        <div class="stat">
-                            <span class="label">Market Cap</span>
-                            <span id="marketCap" class="value">-</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Time Range Buttons -->
-                <div class="time-range">
-                    <button class="range-btn" data-range="1d">1D</button>
-                    <button class="range-btn active" data-range="1mo">1M</button>
-                    <button class="range-btn" data-range="1y">1Y</button>
-                    <button class="range-btn" data-range="5y">5Y</button>
-                </div>
-
-                <!-- Chart Container -->
-                <div class="chart-container">
-                    <canvas id="stockChart"></canvas>
-                </div>
-
-                <!-- Technical Indicators -->
-                <div class="indicators">
-                    <div class="indicator-card">
-                        <span class="indicator-label">MA 20</span>
-                        <span id="ma20" class="indicator-value">-</span>
-                    </div>
-                    <div class="indicator-card">
-                        <span class="indicator-label">MA 50</span>
-                        <span id="ma50" class="indicator-value">-</span>
-                    </div>
-                    <div class="indicator-card">
-                        <span class="indicator-label">RSI (14)</span>
-                        <span id="rsi" class="indicator-value">-</span>
-                    </div>
-                    <div class="indicator-card">
-                        <span class="indicator-label">Volume</span>
-                        <span id="volume" class="indicator-value">-</span>
-                    </div>
-                </div>
-            </main>
+      </div>
+      <div class="topbar-center" id="tickerBar">
+        <span id="tickerSymbol" class="ticker-symbol">AAPL</span>
+        <span id="tickerPrice" class="ticker-price">--.--</span>
+        <span id="tickerChange" class="ticker-change">--.--</span>
+        <span id="tickerPrevClose" class="ticker-prev">Prev: --.--</span>
+      </div>
+      <div class="topbar-right" id="rangeContainer">
+        <div class="time-ranges" id="timeRanges">
+          <button class="range-btn" data-range="1d">1D</button>
+          <button class="range-btn" data-range="5d">5D</button>
+          <button class="range-btn active" data-range="1mo">1M</button>
+          <button class="range-btn" data-range="3mo">3M</button>
+          <button class="range-btn" data-range="1y">1Y</button>
+          <button class="range-btn" data-range="5y">5Y</button>
+          <button class="range-btn" data-range="max">MAX</button>
         </div>
+      </div>
+      <div class="search-wrapper" id="searchWrapper">
+        <input type="text" id="searchInput" placeholder="Search..." autocomplete="off" spellcheck="false">
+        <div id="searchResults" class="search-dropdown"></div>
+      </div>
+    </header>
 
-        <!-- News Section -->
-        <section class="news-section">
-            <h3>📰 Latest News</h3>
-            <div class="news-container" id="newsContainer">
-                <p class="loading">Loading news...</p>
+    <!-- Stocks View -->
+    <div id="stocksView">
+      <div id="layout">
+        <div id="panelLeft" class="panel side-panel">
+          <div class="panel-header">
+            <span>History</span>
+            <div class="panel-actions">
+              <button class="panel-btn" title="Clear history" id="clearHistoryBtn">×</button>
             </div>
-        </section>
+          </div>
+          <div class="panel-body" id="historyPanel">
+            <div class="history-empty">No stocks viewed yet</div>
+          </div>
+          <div class="resize-handle resize-right"></div>
+        </div>
+        <div id="panelCenter" class="panel center-panel">
+          <div id="chartToolbar" class="chart-toolbar">
+            <div class="indicator-chips" id="indicatorChips">
+              <button class="chip active" data-indicator="sma20">SMA 20</button>
+              <button class="chip active" data-indicator="sma50">SMA 50</button>
+              <button class="chip" data-indicator="sma200">SMA 200</button>
+              <button class="chip" data-indicator="ema9">EMA 9</button>
+              <button class="chip" data-indicator="ema21">EMA 21</button>
+              <button class="chip" data-indicator="bb">Bollinger</button>
+              <button class="chip" data-indicator="fib">Fib</button>
+              <button class="chip" data-indicator="drawfib">Draw Fib</button>
+            </div>
+            <div class="interval-pills" id="intervalPills"></div>
+          </div>
+          <div id="chartContainer"></div>
+          <div id="subChartContainer"></div>
+        </div>
+        <div id="panelRight" class="panel side-panel">
+          <div class="panel-header">
+            <span>Watchlist</span>
+            <div class="panel-actions">
+              <button class="panel-btn" title="Add to watchlist" id="addWatchBtn">+</button>
+            </div>
+          </div>
+          <div class="panel-body" id="watchlistPanel">
+            <div class="history-empty" style="font-size:11px">Loading...</div>
+          </div>
+          <div class="resize-handle resize-left"></div>
+        </div>
+      </div>
+      <div id="bottomBar">
+        <div id="indicatorsStrip">
+          <div class="indicator-stat"><span class="stat-label">RSI</span><span class="stat-value" id="rsiVal">--</span></div>
+          <div class="indicator-stat"><span class="stat-label">MACD</span><span class="stat-value" id="macdVal">--</span></div>
+          <div class="indicator-stat"><span class="stat-label">Vol</span><span class="stat-value" id="volVal">--</span></div>
+          <div class="indicator-stat"><span class="stat-label">H</span><span class="stat-value" id="highVal">--</span></div>
+          <div class="indicator-stat"><span class="stat-label">L</span><span class="stat-value" id="lowVal">--</span></div>
+          <div class="indicator-stat"><span class="stat-label">O</span><span class="stat-value" id="openVal">--</span></div>
+          <div class="indicator-stat"><span class="stat-label">Prev</span><span class="stat-value" id="prevCloseVal">--</span></div>
+          <div class="indicator-stat"><span class="stat-label">Mkt Cap</span><span class="stat-value" id="mktCapVal">--</span></div>
+          <div class="indicator-stat"><span class="stat-label">52W H</span><span class="stat-value" id="fiftyTwoHigh">--</span></div>
+          <div class="indicator-stat"><span class="stat-label">52W L</span><span class="stat-value" id="fiftyTwoLow">--</span></div>
+        </div>
+      </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- News View -->
+    <div id="newsView" style="display:none">
+      <div id="newsGrid"></div>
+    </div>
+
+    <!-- Map View -->
+    <div id="mapView" style="display:none">
+      <div id="mapWorkspace">
+        <div id="mapLeft">
+          <div id="mapSearchBar">
+            <input type="text" id="mapSearch" placeholder="Search exchanges, stocks, routes..." autocomplete="off" spellcheck="false">
+            <div class="map-filters">
+              <select id="mapTileType" class="mf-select" title="Map style">
+                <option value="dark">Dark</option>
+                <option value="satellite">Satellite</option>
+                <option value="light">Light</option>
+              </select>
+              <span class="mf-divider"></span>
+              <label class="mf-check"><input type="checkbox" id="mfExchanges" checked> <span>Exchanges</span></label>
+              <label class="mf-check"><input type="checkbox" id="mfRoutes" checked> <span>Routes</span></label>
+              <label class="mf-check"><input type="checkbox" id="mfShips"> <span>Ships</span></label>
+              <label class="mf-check"><input type="checkbox" id="mfShipTrajectories"> <span>Trajectories</span></label>
+               <label class="mf-check"><input type="checkbox" id="mfSatellite" checked> <span>Satellite</span></label>
+              <span class="mf-divider"></span>
+              <label class="mf-check"><input type="checkbox" id="mfStocks"> <span>Stocks</span></label>
+              <button class="mf-btn" id="mfSelectAll">Select All</button>
+            </div>
+            <div id="mapSearchResults" class="search-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:1000"></div>
+          </div>
+          <div id="mapContainer"></div>
+        </div>
+        <div id="mapInfo">
+          <div class="mi-header" id="miHeader">Select an exchange, route, or search result</div>
+          <div class="mi-body" id="miBody">
+            <div class="mi-empty">Click a marker on the map or search above to see details</div>
+          </div>
+          <div id="miNews" class="mi-section" style="display:none">
+            <div class="mi-section-title">News</div>
+            <div id="miNewsContent"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overview View -->
+    <div id="overviewView" style="display:none">
+      <div class="tm-toolbar">
+        <label>Group<span class="tm-lbl">by</span> <select id="treeGroup"><option value="category">Category</option><option value="none">None</option></select></label>
+        <label>Color<span class="tm-lbl">by</span> <select id="treeColor"><option value="change">Change %</option><option value="category">Category</option><option value="value">Price</option></select></label>
+        <label>Size<span class="tm-lbl">by</span> <select id="treeSize"><option value="value">Value</option><option value="equal">Equal</option></select></label>
+        <label>Layout <select id="treeLayout"><option value="vertical">Vertical</option><option value="horizontal">Horizontal</option><option value="squarify">Squarify</option></select></label>
+        <label>PerCat <input type="number" id="treeMax" value="0" min="0" max="200" style="width:48px;font-size:11px;padding:2px 4px;background:var(--bg);color:var(--text-primary);border:1px solid var(--border);border-radius:4px"></label>
+        <span class="tm-divider"></span>
+        <span class="tm-cat-btn active" data-cat="indices">Indices</span>
+        <span class="tm-cat-btn active" data-cat="commodities">Commodities</span>
+        <span class="tm-cat-btn active" data-cat="forex">Forex</span>
+        <span class="tm-cat-btn active" data-cat="crypto">Crypto</span>
+      </div>
+      <div id="ovSections"></div>
+    </div>
+
+    <!-- Trading View -->
+    <div id="tradingView" style="display:none">
+      <div class="tv-layout">
+        <div class="tv-panel tv-left">
+          <div class="panel-header">Account</div>
+          <div class="tv-account" id="tvAccount">
+            <div class="tv-balance"><span class="tv-label">Cash</span><span class="tv-value" id="tvCash">$--</span></div>
+            <div class="tv-balance"><span class="tv-label">Portfolio Value</span><span class="tv-value" id="tvPortfolio">$--</span></div>
+            <div class="tv-balance"><span class="tv-label">Total Equity</span><span class="tv-value" id="tvTotal">$--</span></div>
+          </div>
+          <div class="tv-metrics" id="tvMetrics">
+            <div class="panel-header" style="border:none;padding:8px 0">Metrics</div>
+            <div class="tv-metrics-grid">
+              <div class="tv-metric"><span class="tv-metric-label">Total P&L</span><span class="tv-metric-value" id="tvPnL">--</span></div>
+              <div class="tv-metric"><span class="tv-metric-label">Positions</span><span class="tv-metric-value" id="tvPositions">0</span></div>
+              <div class="tv-metric"><span class="tv-metric-label">Best</span><span class="tv-metric-value" id="tvBest">--</span></div>
+              <div class="tv-metric"><span class="tv-metric-label">Worst</span><span class="tv-metric-value" id="tvWorst">--</span></div>
+              <div class="tv-metric"><span class="tv-metric-label">Winners</span><span class="tv-metric-value" id="tvWinners">0</span></div>
+              <div class="tv-metric"><span class="tv-metric-label">Exposure</span><span class="tv-metric-value" id="tvExposure">0%</span></div>
+            </div>
+          </div>
+          <div class="tv-deposit">
+            <input type="number" id="tvDepositAmt" placeholder="Amount" min="0" step="100">
+            <button id="tvDepositBtn" class="tv-btn">+ Add Funds</button>
+          </div>
+          <div class="tv-holdings" id="tvHoldings">
+            <div class="panel-header" style="border:none;padding:8px 0">Holdings</div>
+          </div>
+        </div>
+        <div class="tv-panel tv-right">
+          <div class="panel-header">Trade</div>
+          <div class="tv-trade">
+            <input type="text" id="tvSymbol" placeholder="Symbol e.g. AAPL">
+            <input type="number" id="tvShares" placeholder="Shares" min="0" step="1">
+            <div class="tv-price-info" id="tvPriceInfo">Current Price: --</div>
+            <div class="tv-buttons">
+              <button id="tvBuyBtn" class="tv-btn tv-buy">Buy</button>
+              <button id="tvSellBtn" class="tv-btn tv-sell">Sell</button>
+            </div>
+          </div>
+          <div class="tv-transactions">
+            <div class="panel-header" style="border:none;padding:8px 0">Transactions</div>
+            <div id="tvTxList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts View -->
+    <div id="alertsView" style="display:none">
+      <div class="al-layout">
+        <div class="al-left">
+          <div class="panel-header">Create Alert</div>
+          <div class="al-form">
+            <select id="alType">
+              <option value="price">Price Alert</option>
+              <option value="change">Change % Alert</option>
+              <option value="news">News / Mentions Alert</option>
+            </select>
+            <input type="text" id="alSymbol" placeholder="Symbol e.g. AAPL">
+            <div class="al-field"><input type="number" id="alThreshold" placeholder="Threshold (price or %)" step="0.01"></div>
+            <div class="al-field"><select id="alDirection">
+              <option value="above">Above</option>
+              <option value="below">Below</option>
+              <option value="any">Any</option>
+            </select></div>
+            <button id="alCreateBtn" class="tv-btn">Create Alert</button>
+          </div>
+          <div class="panel-header" style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">Triggered</div>
+          <div id="alTriggeredList"></div>
+        </div>
+        <div class="al-right">
+          <div class="panel-header">Active Alerts</div>
+          <div id="alList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI View -->
+    <div id="aiView" style="display:none">
+      <div id="aiLayout">
+        <div id="aiSessionBar">
+          <div class="panel-header" style="padding:8px 10px;display:flex;align-items:center;justify-content:space-between">
+            <span>Sessions</span>
+            <button id="aiNewSessionBtn" class="mf-btn" style="font-size:10px;padding:2px 8px">+ New</button>
+          </div>
+          <div id="aiSessionList"></div>
+        </div>
+        <div id="aiWorkspace">
+          <div class="panel-header">Workspace</div>
+          <div id="aiWidgets"></div>
+        </div>
+        <div id="aiChat">
+          <div class="panel-header">AI Chat</div>
+          <div id="aiMessages"></div>
+          <div id="aiStatus" style="display:none">
+            <span id="aiStatusText">Thinking...</span>
+            <div id="aiStatusDetail"></div>
+          </div>
+          <div id="aiInput">
+            <textarea id="aiInputField" placeholder="Ask ZEUS AI to analyze, predict, or research..." rows="2"></textarea>
+            <button id="aiSendBtn">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings View -->
+    <div id="settingsView" style="display:none">
+      <div class="st-layout">
+        <div class="st-section">
+          <div class="panel-header">Theme Colors</div>
+          <div class="st-colors" id="stColors"></div>
+        </div>
+        <div class="st-section">
+          <div class="panel-header">Polling Intervals (seconds)</div>
+          <div class="st-intervals" id="stIntervals"></div>
+        </div>
+        <div class="st-section">
+          <div class="panel-header">AI Provider</div>
+          <div class="st-ai" id="stAI"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tradeConfirmOverlay">
+    <div class="trade-confirm">
+      <h3 id="tcTitle">Confirm Trade</h3>
+      <div class="tc-detail"><span class="tc-label">Action</span><span class="tc-value" id="tcAction">--</span></div>
+      <div class="tc-detail"><span class="tc-label">Symbol</span><span class="tc-value" id="tcSymbol">--</span></div>
+      <div class="tc-detail"><span class="tc-label">Shares</span><span class="tc-value" id="tcShares">--</span></div>
+      <div class="tc-detail"><span class="tc-label">Est. Price</span><span class="tc-value" id="tcPrice">--</span></div>
+      <div class="tc-detail tc-total"><span class="tc-label">Est. Total</span><span class="tc-value" id="tcTotal">--</span></div>
+      <div class="tc-actions">
+        <button class="tc-btn tc-btn-cancel" id="tcCancel">Cancel</button>
+        <button class="tc-btn tc-btn-confirm" id="tcConfirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer"></div>
+  <div id="alertNotificationContainer"></div>
+
+  <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/interact.js/1.10.27/interact.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

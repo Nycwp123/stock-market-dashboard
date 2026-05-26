@@ -1,0 +1,29 @@
+{
+  "theme": {
+    "accent": "#e3b341",
+    "green": "#3fb950",
+    "red": "#f85149",
+    "bg": "#0d1117",
+    "bg_elevated": "#151b23",
+    "bg_card": "#161b22",
+    "text_primary": "#e6edf3",
+    "text_secondary": "#8b949e",
+    "border": "#30363d"
+  },
+  "intervals": {
+    "price_poll": 30,
+    "news_poll": 60,
+    "movers_poll": 30,
+    "overview_poll": 60,
+    "alert_check": 10
+  },
+  "ai": {
+    "provider": "openai",
+    "model": "gpt-4o",
+    "base_url": "https://openrouter.ai/api/v1",
+    "api_key": "",
+    "max_tokens": 4096,
+    "temperature": 0.7,
+    "multimodal": false
+  }
+}

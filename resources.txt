@@ -1,0 +1,54 @@
+Stock Market Dashboard - Resources & Reference Libraries
+=====================================================
+
+BACKEND
+-------
+- Flask 3.x          : Python web framework
+- yfinance           : Yahoo Finance data via Python
+- flask-cors         : Cross-origin resource sharing
+- python-dotenv      : Environment variable management
+- pandas             : Data manipulation & indicator calculations
+- numpy              : Numerical operations
+- requests           : HTTP client (for Yahoo Search API)
+
+FRONTEND
+--------
+- Lightweight Charts : TradingView's canvas-based charting lib (candlestick, line, histogram)
+- interact.js        : Drag & resize with snap/constraint support
+- Inter font         : Professional sans-serif typeface
+
+CHARTING & INDICATORS
+---------------------
+- SMA (Simple Moving Average)     : 20, 50, 200 periods
+- EMA (Exponential Moving Avg)    : 12, 26 periods
+- MACD (Moving Avg Conv Div)      : MACD line, signal, histogram
+- RSI (Relative Strength Index)   : 14 periods
+- Fibonacci Retracement           : 0%, 23.6%, 38.2%, 50%, 61.8%, 78.6%, 100%
+- Volume                          : Trading volume bars
+
+DATA SOURCE
+-----------
+- Yahoo Finance (via yfinance)    : Historical OHLCV + indicators
+- Yahoo Finance Search API        : Symbol/company search
+
+UI COMPONENTS (custom, no framework)
+-------------------------------------
+- Draggable/resizable side panels (trade history, watchlist)
+- Top search bar with autocomplete suggestions
+- Candlestick chart with overlay indicators
+- Time range selector (1D, 1W, 1M, 3M, 1Y, 5Y, MAX)
+- Live price ticker header
+- Trade history list (date, symbol, qty, P&L)
+- Watchlist panel with real-time prices
+- News feed section
+
+DESIGN SYSTEM
+-------------
+- Dark mode         : Background #0d1117, cards #161b22
+- Positive          : #3fb950 (muted green)
+- Negative          : #f85149 (muted red)
+- Accent            : #58a6ff (muted blue)
+- Text              : #e6edf3 (primary), #8b949e (secondary)
+- Borders           : #30363d
+- No neon colors    : all colors muted/matte
+- Font              : Inter, -apple-system, sans-serif

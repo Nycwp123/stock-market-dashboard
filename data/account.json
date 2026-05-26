@@ -1,0 +1,19 @@
+{
+  "cash": 95909.34,
+  "holdings": {
+    "BTC": {
+      "shares": 122.0,
+      "avg_cost": 33.53
+    }
+  },
+  "transactions": [
+    {
+      "type": "buy",
+      "symbol": "BTC",
+      "shares": 122.0,
+      "price": 33.53,
+      "total": 4090.66,
+      "timestamp": 1779769642.315305
+    }
+  ]
+}
